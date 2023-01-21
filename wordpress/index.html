@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>WordPress博客域名更换器</title>
+    <link href="main.css" rel="stylesheet" type="text/css">
+	</head>
+	<body>
+		<h1 class="headline">WordPress 博客域名更换器</h1>
+		
+		<div class="body">
+    		<input type="text" id="old" name="input" placeholder="输入旧域名">
+    		<br><br>
+    		<input type="text" id="new" name="input" placeholder="输入新域名">
+    		<br><br>
+    		<input type="text" id="prefix" name="input" width="600px" placeholder="输入表前缀（留空则代表wp_，别忘了后面要加上_）">
+    		<br><br>
+    	</div>
+    	
+    	<div class="Button">
+    		<input type="submit" value="生成" id="submit" class="button">
+    		<br><br><br>
+		    <input type="submit" value="提示" class="button" onclick="document.getElementById('tip').showModal();">
+		</div>
+		
+		<div class="dialog">
+		    <dialog id="tip">
+                <h1>提示</h1>
+                <p>在三个输入框中依次输入旧域名、新域名和表前缀，表前缀是安装Wordpress时填写的，如果你不清楚，请直接填写wp_，如果你在安装Wordpress时使用了不同的表前缀，你就需要输入正确的表前缀，并且最后需要写上_</p>
+                <p>点击生成后你会见到自动生成的SQL，把这些SQL复制到MySQL去执行一下代码就会自动执行数据库操作。</p>
+                <p class="warning">注意：在执行任何数据库操作前都应该对数据库进行备份。数据是无价的！</p>
+                <button class="close" onclick="document.getElementById('tip').close();">&times;</button>
+            </dialog>
+            
+            <dialog id="Result">
+                <h1 id="tips"></h1>
+                <p id="result"></p>
+                <button class="close" onclick="document.getElementById('Result').close();">&times;</button>
+            </dialog>
+		</div>
+            
+		<script type="text/javascript">
+			function output(){
+				var oldurl = document.getElementById("old").value;
+				var newurl = document.getElementById("new").value;
+				var prefix = document.getElementById("prefix").value;
+				if(oldurl != "" && newurl != ""){
+				    if(prefix != ""){
+				        var output = `
+        					UPDATE ${prefix}options SET option_value = REPLACE(option_value, '${oldurl}', '${newurl}') WHERE option_name = 'home' OR option_name = 'siteurl';
+        					<br><br>
+        					UPDATE ${prefix}posts SET post_content = REPLACE (post_content, '${oldurl}', '${newurl}');
+        					<br><br>
+        					UPDATE ${prefix}postmeta SET meta_value = REPLACE (meta_value, '${oldurl}','${newurl}');
+        					<br><br>
+        					UPDATE ${prefix}comments SET comment_content = REPLACE (comment_content, '${oldurl}', '${newurl}');
+        					<br><br>
+        					UPDATE ${prefix}comments SET comment_author_url = REPLACE (comment_author_url, '${oldurl}','${newurl}');
+        					<br><br>
+        					UPDATE ${prefix}posts SET guid = REPLACE (guid, '${oldurl}', '${newurl}') WHERE post_type = 'attachment';
+						`;
+				    }
+				    else{
+				        var output = `
+        					UPDATE wp_options SET option_value = REPLACE(option_value, '${oldurl}', '${newurl}') WHERE option_name = 'home' OR option_name = 'siteurl';
+        					<br><br>
+        					UPDATE wp_posts SET post_content = REPLACE (post_content, '${oldurl}', '${newurl}');
+        					<br><br>
+        					UPDATE wp_postmeta SET meta_value = REPLACE (meta_value, '${oldurl}','${newurl}');
+        					<br><br>
+        					UPDATE wp_comments SET comment_content = REPLACE (comment_content, '${oldurl}', '${newurl}');
+        					<br><br>
+        					UPDATE wp_comments SET comment_author_url = REPLACE (comment_author_url, '${oldurl}','${newurl}');
+        					<br><br>
+        					UPDATE wp_posts SET guid = REPLACE (guid, '${oldurl}', '${newurl}') WHERE post_type = 'attachment';
+						`;
+				    }
+				document.getElementById("tips").innerHTML = "输出结果(请到MySQL中运行以下代码)：";
+				document.getElementById("result").innerHTML = output;
+				document.getElementById("Result").showModal();
+				}
+			}
+			document.getElementById("submit").onclick = output;
+		</script>
+	</body>
+</html>
